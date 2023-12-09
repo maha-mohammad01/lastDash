@@ -1,39 +1,82 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 
 const GroundTable = () => {
   const [groundData, setGroundData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newGround, setNewGround] = useState({
+    name: '',
+    phone: '',
+    location: '',
+    city: '',
+    size: '',
+    hourly_rate: '',
+    start_time: '',
+    end_time: '',
+    description: '',
+    payment: false,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3100/Addground');
+        const response = await axios.get('http://localhost:2000/stadiums');
         setGroundData(response.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        setError(error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, []); // Empty dependency array means this effect runs once after the initial render
+  }, []);
 
-  const handleAccept = (index) => {
-    // Handle accept action, you can update the data or perform other actions
-    console.log(`Accepted: ${groundData[index].fullName}`);
+  const handleEdit = (index) => {
+    console.log(`Edit: ${groundData[index].fullName}`);
+    // Add logic for handling edit action
   };
 
-  const handleReject = (index) => {
-    // Handle reject action, you can update the data or perform other actions
-    console.log(`Rejected: ${groundData[index].fullName}`);
+  const handleDelete = (index) => {
+    console.log(`Delete: ${groundData[index].fullName}`);
+    // Add logic for handling delete action
   };
+
+  const handleAddGround = async () => {
+    try {
+      await axios.post('http://localhost:2000/stadiums', newGround);
+      const response = await axios.get('http://localhost:2000/stadiums');
+      setGroundData(response.data);
+      setIsModalOpen(false);
+      setNewGround(initialNewGroundState);
+    } catch (error) {
+      console.error('Error adding ground:', error);
+    }
+  };
+  
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   return (
-    <div className="mt-5">
-        <h1 className='font-bold mt-28  text-2xl'> Add playground </h1>
-      <table className="min-w-full bg-white border border-gray-300 ml-10 mt-16">
-        <thead>
+    <div className="container mx-auto mt-8 p-4">
+      <h1 className="text-3xl font-bold mb-6 text-emerald-600 ml-10">All Playgrounds</h1>
+
+      <button
+        className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700"
+        onClick={() => setIsModalOpen(true)}
+      >
+        <FaPlus className="mr-2" /> Add Playground
+      </button>
+
+      <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-md overflow-hidden mt-4">
+        <thead className="bg-emerald-600 text-white">
           <tr>
-            <th className="py-2 px-4 border-b">Full Name</th>
+            <th className="py-2 px-4 border-b">Name</th>
             <th className="py-2 px-4 border-b">Phone</th>
             <th className="py-2 px-4 border-b">Location</th>
             <th className="py-2 px-4 border-b">City</th>
@@ -41,44 +84,224 @@ const GroundTable = () => {
             <th className="py-2 px-4 border-b">Price</th>
             <th className="py-2 px-4 border-b">Start Time</th>
             <th className="py-2 px-4 border-b">End Time</th>
-            <th className="py-2 px-4 border-b">Notice</th>
+            <th className="py-2 px-4 border-b">Description</th>
             <th className="py-2 px-4 border-b">Payment</th>
-            <th className="py-2 px-4 border-b">Images</th>
             <th className="py-2 px-4 border-b">Action</th>
           </tr>
         </thead>
         <tbody>
           {groundData.map((ground, index) => (
-            <tr key={index}>
-              <td className="py-2 px-4 border-b">{ground.fullName}</td>
+            <tr key={index} className={index % 2 === 0 ? 'bg-gray-100' : 'bg-white'}>
+              <td className="py-2 px-4 border-b">{ground.name}</td>
               <td className="py-2 px-4 border-b">{ground.phone}</td>
               <td className="py-2 px-4 border-b">{ground.location}</td>
               <td className="py-2 px-4 border-b">{ground.city}</td>
               <td className="py-2 px-4 border-b">{ground.size}</td>
-              <td className="py-2 px-4 border-b">{ground.price}</td>
-              <td className="py-2 px-4 border-b">{ground.startTime}</td>
-              <td className="py-2 px-4 border-b">{ground.endTime}</td>
-              <td className="py-2 px-4 border-b">{ground.notice}</td>
+              <td className="py-2 px-4 border-b">{ground.hourly_rate}</td>
+              <td className="py-2 px-4 border-b">{ground.start_time}</td>
+              <td className="py-2 px-4 border-b">{ground.end_time}</td>
+              <td className="py-2 px-4 border-b">{ground.description}</td>
               <td className="py-2 px-4 border-b">{ground.payment ? 'Yes' : 'No'}</td>
-              <td className="py-2 px-4 border-b">{ground.images.join(', ')}</td>
               <td className="py-2 px-4 border-b">
                 <button
-                  className="bg-green-500 text-white py-1 px-2 mr-2 rounded"
-                  onClick={() => handleAccept(index)}
+                  className="text-blue-500 hover:text-blue-700 ml-2"
+                  onClick={() => handleEdit(index)}
                 >
-                  Accept
+                  <FaEdit />
                 </button>
                 <button
-                  className="bg-red-500 text-white py-1 px-2 rounded"
-                  onClick={() => handleReject(index)}
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => handleDelete(index)}
                 >
-                  Reject
+                  <FaTrash />
                 </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+
+
+
+
+      {isModalOpen && (
+  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+    <div className="bg-white p-8 rounded-md w-96">
+      <h2 className="text-2xl font-bold mb-4">Add Playground</h2>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Name */}
+        <div className="mb-4">
+          <label htmlFor="name" className="block text-sm font-semibold text-gray-600">
+            Name:
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={newGround.name}
+            onChange={(e) => setNewGround({ ...newGround, name: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Phone */}
+        <div className="mb-4">
+          <label htmlFor="phone" className="block text-sm font-semibold text-gray-600">
+            Phone:
+          </label>
+          <input
+            type="text"
+            id="phone"
+            name="phone"
+            value={newGround.phone}
+            onChange={(e) => setNewGround({ ...newGround, phone: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Location */}
+        <div className="mb-4">
+          <label htmlFor="location" className="block text-sm font-semibold text-gray-600">
+            Location:
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={newGround.location}
+            onChange={(e) => setNewGround({ ...newGround, location: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* City */}
+        <div className="mb-4">
+          <label htmlFor="city" className="block text-sm font-semibold text-gray-600">
+            City:
+          </label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={newGround.city}
+            onChange={(e) => setNewGround({ ...newGround, city: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Size */}
+        <div className="mb-4">
+          <label htmlFor="size" className="block text-sm font-semibold text-gray-600">
+            Size:
+          </label>
+          <input
+            type="text"
+            id="size"
+            name="size"
+            value={newGround.size}
+            onChange={(e) => setNewGround({ ...newGround, size: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Hourly Rate */}
+        <div className="mb-4">
+          <label htmlFor="hourlyRate" className="block text-sm font-semibold text-gray-600">
+            Hourly Rate:
+          </label>
+          <input
+            type="text"
+            id="hourlyRate"
+            name="hourlyRate"
+            value={newGround.hourly_rate}
+            onChange={(e) => setNewGround({ ...newGround, hourly_rate: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Start Time */}
+        <div className="mb-4">
+          <label htmlFor="startTime" className="block text-sm font-semibold text-gray-600">
+            Start Time:
+          </label>
+          <input
+            type="time"
+            id="startTime"
+            name="startTime"
+            value={newGround.start_time}
+            onChange={(e) => setNewGround({ ...newGround, start_time: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* End Time */}
+        <div className="mb-4">
+          <label htmlFor="endTime" className="block text-sm font-semibold text-gray-600">
+            End Time:
+          </label>
+          <input
+            type="time"
+            id="endTime"
+            name="endTime"
+            value={newGround.end_time}
+            onChange={(e) => setNewGround({ ...newGround, end_time: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="mb-4">
+          <label htmlFor="description" className="block text-sm font-semibold text-gray-600">
+            Description:
+          </label>
+          <input
+            type="text"
+            id="description"
+            name="description"
+            value={newGround.description}
+            onChange={(e) => setNewGround({ ...newGround, description: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+        </div>
+
+        {/* Payment */}
+        <div className="mb-4">
+          <label htmlFor="payment" className="block text-sm font-semibold text-gray-600">
+            Payment:
+          </label>
+          <select
+            id="payment"
+            name="payment"
+            value={newGround.payment}
+            onChange={(e) => setNewGround({ ...newGround, payment: e.target.value === 'yes' })}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+
+      <button
+        className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700"
+        onClick={handleAddGround}
+      >
+        Add
+      </button>
+      <button
+        className="ml-2 text-gray-500 hover:text-gray-700"
+        onClick={() => setIsModalOpen(false)}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
+
+
+
     </div>
   );
 };
