@@ -1068,7 +1068,7 @@ app.delete('/delete-stadium/:stadium_id', authenticateAdminToken, async (req, re
   
 function authenticateAdminToken(req, res, next) {
     const token = req.header('Authorization');
-    
+      
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -1248,9 +1248,9 @@ app.get('/user-count', authenticateAdminToken, async (req, res) => {
 
 app.get('/allusers', authenticateAdminToken, async (req, res) => {
   try {
-    const { page = 1, pageSize = 20 } = req.query;
-    const offset = (page - 1) * pageSize;
-    const result = await pool.query('SELECT user_id, full_name, email, user_role FROM users WHERE is_deleted = false LIMIT $1 OFFSET $2', [pageSize, offset]);
+    const result = await pool.query(
+      'SELECT user_id, full_name, email, user_role FROM users WHERE is_deleted = false ORDER BY user_id'
+    );
 
     res.json({ message: 'Users with "false" status retrieved successfully', users: result.rows });
   } catch (error) {
@@ -1258,6 +1258,9 @@ app.get('/allusers', authenticateAdminToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+
 
 
 
@@ -1293,19 +1296,24 @@ app.get('/bookings-info', authenticateAdminToken, async (req, res) => {
     const { page = 1, pageSize = 20 } = req.query;
     const offset = (page - 1) * pageSize;
       const result = await pool.query(`
-          SELECT
-              b.booking_id,
-              u.full_name,
-              b.phone,
-              b.start_time,
-              b.end_time,
-              b.note,
-              b.status,
-              EXTRACT(HOUR FROM (b.end_time - b.start_time)) AS total_hours
-          FROM
-              public.bookings b
-          JOIN
-              public.users u ON b.user_id = u.user_id;
+      SELECT
+      b.booking_id,
+      u.full_name,
+      s.stadium_id,
+      s.name AS stadium_name,
+      b.phone,
+      b.start_time,
+      b.end_time,
+      b.note,
+      b.status,
+      EXTRACT(HOUR FROM (b.end_time - b.start_time)) AS total_hours
+  FROM
+      public.bookings b
+  JOIN
+      public.users u ON b.user_id = u.user_id
+  JOIN
+      public.stadiums s ON b.stadium_id = s.stadium_id;
+  
       `);
 
       res.json({ message: 'Booking information retrieved successfully', bookings: result.rows });

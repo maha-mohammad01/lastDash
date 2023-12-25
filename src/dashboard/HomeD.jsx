@@ -29,7 +29,7 @@ function HomeD() {
 
   return (
     <div>
-      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] mt-28">
+      <div className="ml-auto mb-6 lg:w-[100%] xl:w-[100%] 2xl:w-[85%] mt-28">
         <div className="fixed min-w-[80%] z-10 top-0 h-16 border-b bg-white lg:py-2.5" style={{ top: 0 }}>
           <div className="px-6 flex items-center justify-between space-x-4 2xl:container">
             <h5 hidden="" className="text-2xl text-gray-600 font-medium lg:block">

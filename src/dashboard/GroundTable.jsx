@@ -1,8 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const GroundTable = () => {
+  const initialNewGroundState = {
+    name: '',
+    phone: '',
+    location: '',
+    city: '',
+    size: '',
+    hourly_rate: '',
+    start_time: '',
+    end_time: '',
+    description: '',
+    payment: false,
+  };
+
   const [groundData, setGroundData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,10 +38,22 @@ const GroundTable = () => {
     payment: false,
   });
 
+  const getAuthToken = () => {
+    const tokenFromCookie = Cookies.get('auToken');
+    return tokenFromCookie || null;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      const authToken = getAuthToken();
+      // console.log('Authentication Token:', authToken);
+
       try {
-        const response = await axios.get('http://localhost:2000/stadiums');
+        const response = await axios.get('http://localhost:2000/stadiums', {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
         setGroundData(response.data);
       } catch (error) {
         setError(error);
@@ -48,23 +77,77 @@ const GroundTable = () => {
 
   const handleAddGround = async () => {
     try {
-      await axios.post('http://localhost:2000/stadiums', newGround);
-      const response = await axios.get('http://localhost:2000/stadiums');
+      const authToken = getAuthToken();
+      // console.log('Authentication Token:', authToken);
+
+      const formData = new FormData();
+      formData.append('name', newGround.name);
+      formData.append('phone', newGround.phone);
+      formData.append('location', newGround.location);
+      formData.append('city', newGround.city);
+      formData.append('size', newGround.size);
+      formData.append('hourly_rate', newGround.hourly_rate);
+      formData.append('start_time', newGround.start_time);
+      formData.append('end_time', newGround.end_time);
+      formData.append('description', newGround.description);
+      formData.append('payment', newGround.payment);
+
+      // إضافة الصور إلى الـ FormData
+      if (newGround.images_url) {
+        for (let i = 0; i < newGround.images_url.length; i++) {
+          formData.append('images_url', newGround.images_url[i]);
+        }
+      }
+
+      await axios.post('http://localhost:2000/add-stadium', formData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data', // ضروري لرفع الصور
+        },
+      });
+
+      const response = await axios.get('http://localhost:2000/all-stadiums', {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
       setGroundData(response.data);
       setIsModalOpen(false);
       setNewGround(initialNewGroundState);
+
+      // استخدمي toast.success لعرض رسالة نجاح
+      toast.success('Playground added successfully');
     } catch (error) {
       console.error('Error adding ground:', error);
+      // استخدمي toast.error لعرض رسالة خطأ
+      toast.error('Failed to add playground');
     }
   };
   
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>Loading...</p> 
   if (error) return <p>Error: {error.message}</p>;
+
+  const handleChange = (e) => {
+    if (e.target.name === 'images_url') {
+      const files = e.target.files;
+      setNewGround({
+        ...newGround,
+        images_url: files,
+      });
+    } else {
+      setNewGround({
+        ...newGround,
+        [e.target.name]: e.target.value,
+      });
+    }
+  };
+  
 
   return (
     <div className="container mx-auto mt-8 p-4">
-      <h1 className="text-3xl font-bold mb-6 text-emerald-600 ml-10">All Playgrounds</h1>
+      <h1 className="text-3xl font-bold mb-6 text-emerald-600 ml-2 sm:ml-10">All Playgrounds</h1>
 
       <button
         className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700"
@@ -275,13 +358,29 @@ const GroundTable = () => {
             id="payment"
             name="payment"
             value={newGround.payment}
-            onChange={(e) => setNewGround({ ...newGround, payment: e.target.value === 'yes' })}
+            onChange={(e) => setNewGround({ ...newGround, payment: e.target.value == 'yes' })}
             className="w-full px-3 py-2 border rounded-md"
           >
             <option value="yes">Yes</option>
             <option value="no">No</option>
           </select>
         </div>
+        <div className="mb-5">
+  <label
+    htmlFor="images_url" // Corrected htmlFor
+    className="mb-3 block text-base font-medium text-[#07074D]"
+  >
+    Upload Images
+  </label>
+  <input
+    type="file"
+    name="images_url" // Corrected name
+    id="images"
+    accept="image/*"
+    multiple
+    onChange={handleChange}
+  />
+</div>
       </div>
 
       <button
@@ -307,3 +406,5 @@ const GroundTable = () => {
 };
 
 export default GroundTable;
+
+

@@ -13,13 +13,15 @@ function App() {
     <div className="App">
       <Router>
         
-        <SideBar />
+       
         <Routes>
         <Route path="/users" element={<Users />} />
         <Route path="/bookingground" element={<Bookingground />} />
+        <Route path="/dash" element={<Dash/>} />
         <Route path="/dashboarda" element={<DashboardA/>} />
-      
-          <Route path="/login" element={<Login />} />
+
+        <Route path="/users" element={<Users />} />
+          <Route path="/" element={<Login />} />
           
         </Routes>
       </Router>
