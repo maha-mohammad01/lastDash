@@ -469,7 +469,7 @@
 //   }
 // });
 // // استرجاع بيانات المستخدم وحجوزاته
-// app.get('/user-profile', authenticateToken, async (req, res) => {
+// app.get('/profile', authenticateToken, async (req, res) => {
 //   const { user_id } = req.user;
 
 //   try {
