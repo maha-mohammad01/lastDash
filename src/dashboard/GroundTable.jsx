@@ -70,10 +70,12 @@ const GroundTable = () => {
     // Add logic for handling edit action
   };
 
-  const handleDelete = (index) => {
-    console.log(`Delete: ${groundData[index].fullName}`);
-    // Add logic for handling delete action
+  const handleDelete = async (index, stadiumId) => {
+    console.log(`Delete: ${groundData[index].name}`);
+    // قم بدعوة دالة حذف هنا
+    await handleDeleteGround(stadiumId);
   };
+  
 
   const handleAddGround = async () => {
     try {
@@ -125,7 +127,28 @@ const GroundTable = () => {
     }
   };
   
-
+  const handleDeleteGround = async (stadiumId) => {
+    try {
+      const authToken = getAuthToken();
+      const response = await axios.delete(`http://localhost:2000/delete-stadium/${stadiumId}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+  
+      // تحديث حالة البيانات المحلية بعد الحذف
+      setGroundData(response.data);
+  
+      // استخدم toast.success لعرض رسالة نجاح
+      toast.success('Playground deleted successfully');
+    } catch (error) {
+      console.error('Error deleting ground:', error);
+  
+      // استخدم toast.error لعرض رسالة خطأ
+      toast.error('Failed to delete playground');
+    }
+  };
+  
   if (loading) return <p>Loading...</p> 
   if (error) return <p>Error: {error.message}</p>;
 
@@ -193,11 +216,11 @@ const GroundTable = () => {
                   <FaEdit />
                 </button>
                 <button
-                  className="text-red-500 hover:text-red-700"
-                  onClick={() => handleDelete(index)}
-                >
-                  <FaTrash />
-                </button>
+    className="text-red-500 hover:text-red-700"
+    onClick={() => handleDelete(index, ground.stadium_id)}
+  >
+    <FaTrash />
+  </button>
               </td>
             </tr>
           ))}
